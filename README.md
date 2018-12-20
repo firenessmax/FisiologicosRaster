@@ -134,10 +134,8 @@ for i in [4,17]:
     Neurona 4
 
 
-    /Users/fireness/anaconda2/lib/python2.7/site-packages/numpy/core/_methods.py:29: RuntimeWarning: invalid value encountered in reduce
-      return umr_minimum(a, axis, None, out, keepdims)
-    /Users/fireness/anaconda2/lib/python2.7/site-packages/numpy/core/_methods.py:26: RuntimeWarning: invalid value encountered in reduce
-      return umr_maximum(a, axis, None, out, keepdims)
+    /Users/nestormoramenares/venv/lib/python2.7/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+      return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
 
 
 
@@ -153,71 +151,55 @@ for i in [4,17]:
 
 
 ```python
-def AnguloPreferencia(neuronData):
-    u,ul,l,dl,d,dr,r,ur=[],[],[],[],[],[],[],[]
-    for dat,td in zip(list(neuronData[0]),list(neuronData[1])):#trie_dir
-         
-        if td[1]>0 and td[0]==0:#up
-            u.append(len(filter(lambda d:d>0,dat)))
-        elif td[1]<0 and td[0]==0:#down
-            d.append(len(filter(lambda d:d>0,dat)))
-        elif td[1]==0 and td[0]>0:#right
-            r.append(len(filter(lambda d:d>0,dat)))
-        elif td[1]==0 and td[0]<0:#left
-            l.append(len(filter(lambda d:d>0,dat)))
-        elif td[1]>0 and td[0]<0:#up left
-            ul.append(len(filter(lambda d:d>0,dat)))
-        elif td[1]>0 and td[0]>0:#up right
-            ur.append(len(filter(lambda d:d>0,dat)))
-        elif td[1]<0 and td[0]<0:#down left
-            dl.append(len(filter(lambda d:d>0,dat)))
-        elif td[1]<0 and td[0]>0:#down right
-            dr.append(len(filter(lambda d:d>0,dat)))
-    samples = [np.mean(u),np.mean(ul),np.mean(l),np.mean(dl),np.mean(d),np.mean(dr),np.mean(r),np.mean(ur)]
-    theta = np.array(np.linspace(np.pi/2,9*np.pi/4,8))
-    angles = np.linspace(0,2*np.pi,1000)
-    M,m = np.max(sample),np.min(sample)
-    amp = M-m
-    err = [(np.square((np.cos(theta+a)*amp/2+m+amp/2) - samples)).mean() for a in angles]
-    return angles[np.argmin(err)]
-```
-
-
-```python
 import numpy as np
 def FR(neuronData):
     u,ul,l,dl,d,dr,r,ur=[],[],[],[],[],[],[],[]
     for dat,td in zip(list(neuronData[0]),list(neuronData[1])):#trie_dir
-         
         if td[1]>0 and td[0]==0:#up
-            u.append(len(filter(lambda d:d>0,dat)))
+            u.append(len(filter(lambda d:d>0,dat))/filter(lambda d:d>0,dat)[-1] if len(filter(lambda d:d>0,dat))>0 else 0) 
         elif td[1]<0 and td[0]==0:#down
-            d.append(len(filter(lambda d:d>0,dat)))
+            d.append(len(filter(lambda d:d>0,dat))/filter(lambda d:d>0,dat)[-1] if len(filter(lambda d:d>0,dat))>0 else 0)
         elif td[1]==0 and td[0]>0:#right
-            r.append(len(filter(lambda d:d>0,dat)))
+            r.append(len(filter(lambda d:d>0,dat))/filter(lambda d:d>0,dat)[-1] if len(filter(lambda d:d>0,dat))>0 else 0)
         elif td[1]==0 and td[0]<0:#left
-            l.append(len(filter(lambda d:d>0,dat)))
+            l.append(len(filter(lambda d:d>0,dat))/filter(lambda d:d>0,dat)[-1] if len(filter(lambda d:d>0,dat))>0 else 0)
         elif td[1]>0 and td[0]<0:#up left
-            ul.append(len(filter(lambda d:d>0,dat)))
+            ul.append(len(filter(lambda d:d>0,dat))/filter(lambda d:d>0,dat)[-1] if len(filter(lambda d:d>0,dat))>0 else 0)
         elif td[1]>0 and td[0]>0:#up right
-            ur.append(len(filter(lambda d:d>0,dat)))
+            ur.append(len(filter(lambda d:d>0,dat))/filter(lambda d:d>0,dat)[-1] if len(filter(lambda d:d>0,dat))>0 else 0)
         elif td[1]<0 and td[0]<0:#down left
-            dl.append(len(filter(lambda d:d>0,dat)))
+            dl.append(len(filter(lambda d:d>0,dat))/filter(lambda d:d>0,dat)[-1] if len(filter(lambda d:d>0,dat))>0 else 0)
         elif td[1]<0 and td[0]>0:#down right
-            dr.append(len(filter(lambda d:d>0,dat)))
-    samples = [np.mean(u),np.mean(ul),np.mean(l),np.mean(dl),np.mean(d),np.mean(dr),np.mean(r),np.mean(ur)]
+            dr.append(len(filter(lambda d:d>0,dat))/filter(lambda d:d>0,dat)[-1] if len(filter(lambda d:d>0,dat))>0 else 0)
+    samples = [np.mean(r),np.mean(ur),np.mean(u),np.mean(ul),np.mean(l),np.mean(dl),np.mean(d),np.mean(dr)]
     return samples
 ```
 
 
 ```python
-FR(neuronsData[1])
+from scipy import optimize
+
+
+def fit(x, y):
+    params, params_covariance = optimize.curve_fit(lambda x,a,b,c: a * np.cos(x-b) + c , x, y,bounds=((0,0,-np.inf),(np.inf,2*np.pi,np.inf)))
+    return params, params_covariance
+def AnguloPreferencia(neuronData):
+    samples = FR(neuronData)
+    theta = np.array(np.linspace(0,7*np.pi/4,8))
+    params, covariance = fit(theta, samples)
+    return params
+
+```
+
+
+```python
+AnguloPreferencia(neuronsData[1])
 ```
 
 
 
 
-    [14.55, 13.85, 21.75, 32.2, 36.1, 25.05, 15.1, 15.7]
+    array([10.26353203,  4.90353833, 27.09022557])
 
 
 
@@ -226,11 +208,10 @@ FR(neuronsData[1])
 for i in [4,17]:
     plt.title("Ajuste Coseno Neurona %d"%i)
     sample = FR(neuronsData[i])
-    theta = np.array(np.linspace(np.pi/2,9*np.pi/4,8))
-    M,m = np.max(sample),np.min(sample)
-    amp = M-m
-    plt.plot(np.linspace(np.pi/2,9*np.pi/4,8),sample,'ro')
-    plt.plot(np.linspace(np.pi/2,9*np.pi/4,1000),np.cos(np.linspace(np.pi/2,9*np.pi/4,1000)+AnguloPreferencia(neuronsData[i]))*amp/2+m+amp/2,'g')
+    theta = np.array(np.linspace(0,7*np.pi/4,8))
+    amp,fase ,b0 = AnguloPreferencia(neuronsData[i])
+    plt.plot(theta,sample,'ro')
+    plt.plot(np.linspace(0,7*np.pi/4,1000),np.cos(np.linspace(0,7*np.pi/4,1000)-fase)*amp+b0,'g')
     plt.savefig("CosineTunning%d.png"%i)
     plt.show()
     
@@ -271,9 +252,10 @@ def compass(u, v, arrowprops=None):
     """
 
     angles, radii = cart2pol(u, v)
-
+    
     fig, ax = plt.subplots(subplot_kw=dict(polar=True))
-
+    fig.set_figheight(10)
+    fig.set_figwidth(10)
     kw = dict(arrowstyle="->", color='r')
     if arrowprops:
         kw.update(arrowprops)
@@ -281,18 +263,19 @@ def compass(u, v, arrowprops=None):
                  arrowprops=kw) for
      angle, radius in zip(angles, radii)]
 
-    ax.set_ylim(0, np.max(radii))
+    ax.set_ylim(0, 1)
 
     return fig, ax
 ```
 
 
 ```python
-frn= [np.mean(FR(neuronsData[i])) for i in range(30)]
-nrm = np.max(frn)-np.min(frn)
-apn= [AnguloPreferencia(neuronsData[i]) for i in range(30)]
-u = (np.cos(apn)*frn-np.min(frn))/nrm
-v = (np.sin(apn)*frn-np.min(frn))/nrm
+fr = [np.max(FR(nd)) for nd in neuronsData]
+frs = [FR(nd) for nd in neuronsData]
+cosfit= [AnguloPreferencia(neuronsData[i]) for i in range(30)]
+apn = [cf[1] for cf in cosfit]
+u = np.cos(apn)*(np.array(fr)-min(fr))/(max(fr)-min(fr))
+v = np.sin(apn)*(np.array(fr)-min(fr))/(max(fr)-min(fr))
 fig, ax = compass(u, v)
 ax.set_title('Angulos Preferencia segun neuronas\n')
 
@@ -315,3 +298,18 @@ None
 
 ![png](output_12_0.png)
 
+
+
+```python
+
+```
+
+
+```python
+
+```
+
+
+```python
+
+```
